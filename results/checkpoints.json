@@ -1,0 +1,18 @@
+[
+  {
+    "model": "u_estae",
+    "run": "ours_e1_td20",
+    "epoch": 98,
+    "validation_mIoU": 62.47468673194426,
+    "test_mIoU": 60.99554455800465,
+    "sha256": "99110b2307800971ef8e1aa137128084aa072cee22695e9d330a9fbc84e09087"
+  },
+  {
+    "model": "utae_boundary",
+    "run": "utae_e1_td20",
+    "epoch": 96,
+    "validation_mIoU": 66.55797145535418,
+    "test_mIoU": 64.53470877100702,
+    "sha256": "3b60c75eef5df891df6e981ce7a45fe660b38719476983f005e85a24a184b99b"
+  }
+]
