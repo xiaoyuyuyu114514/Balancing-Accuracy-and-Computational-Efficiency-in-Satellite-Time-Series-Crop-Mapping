@@ -1,38 +1,58 @@
 # Balancing Accuracy and Computational Efficiency in Satellite Time-Series Crop Mapping
 
-U-ESTAE (TP-EAN in the experiment logs) summarizes a Sentinel-2 sequence with six date windows. Each window provides a weighted state and trend before a single spatial U-Net. The second model uses the U-TAE backbone. Both released checkpoints use boundary-weighted cross-entropy and training-time temporal dropout (20%).
+This repository contains the code and 15 checkpoints for the final five-fold comparison on PASTIS. U-ESTAE aggregates per-pixel features into state and trend summaries in 12 soft date windows before applying a single spatial U-Net. Each date has 24 feature channels, and the aggregated 576-channel summary is projected to 32 channels. The original and enhanced U-TAE share the same network architecture.
 
-## Checkpoints
+## Five-fold checkpoints
 
-We selected the variant and epoch within each model family by validation mIoU among completed, aligned 100-epoch experiments. Test scores refer to those selected checkpoints.
+| Model | Training recipe | Weights | PASTIS test mIoU, mean ± SD (%) |
+|---|---|---|---:|
+| U-TAE | Cross-entropy, full sequence | [utae](weights/five_fold/utae/) | 63.17 ± 1.95 |
+| U-TAE enhanced | Boundary-weighted cross-entropy (E1) and 20% temporal dropout (CPU) | [utae_enhanced](weights/five_fold/utae_enhanced/) | 65.03 ± 1.27 |
+| U-ESTAE | E1 and 20% temporal dropout (GPU mask) | [u_estae](weights/five_fold/u_estae/) | 62.98 ± 1.30 |
 
-| Model | Weights | Epoch | Validation mIoU (%) | Test mIoU (%) |
-|---|---|---:|---:|---:|
-| U-ESTAE | weights/u_estae.pt | 98 | 62.47 | 61.00 |
-| Boundary-aware U-TAE | weights/utae_boundary.pt | 96 | 66.56 | 64.53 |
+Each `fold_N.pt` contains a CPU `state_dict` and the selected epoch for **test fold N**. Each run uses three training folds and the preceding validation fold, with fold 5 preceding fold 1. The per-fold validation and test scores, split assignments, selected epochs, and SHA-256 hashes are in the [checkpoint manifest](results/five_fold_checkpoints.json).
 
-Each file contains a PyTorch inference state dictionary. SHA-256 hashes and source run IDs are in [results/checkpoints.json](results/checkpoints.json).
+## Setup
 
-## Data and usage
+Install PyTorch 2.8 with the build appropriate for your CPU or CUDA environment, plus NumPy. Obtain [PASTIS](https://github.com/VSainteuf/pastis-benchmark) separately. Its root must contain `metadata.geojson`, `NORM_S2_patch.json`, `DATA_S2/`, and `ANNOTATIONS/`. From this repository's root, set the dataset location. In PowerShell:
 
-Use Python with PyTorch 2.8 and NumPy. Training uses a CUDA GPU with BF16 support. The dataset root must contain metadata.geojson, NORM_S2_patch.json, DATA_S2/ and ANNOTATIONS/. From the repository root, set the data location in PowerShell:
+```powershell
+$env:PASTIS_ROOT = "D:/datasets/PASTIS"
+```
 
-    $env:PASTIS_ROOT = "D:/datasets/PASTIS"
+On Linux, run `export PASTIS_ROOT=/path/to/PASTIS`.
 
-On Linux use export PASTIS_ROOT=/path/to/PASTIS. Predict a 128-by-128 class-index mask on a fold-5 patch:
+## Inference
 
-    python code/predict.py --model u_estae --patch 40173 --output runs/u_estae_40173.npy
-    python code/predict.py --model utae_boundary --patch 40173 --output runs/utae_40173.npy
+Predict a held-out PASTIS patch. The script selects the appropriate checkpoint from the patch's fold and writes a 128 × 128 `uint8` class-index mask. `--device cpu` is available.
 
-Reproduce the training protocol using the included epoch sampling order:
+```bash
+python code/predict_cv.py --model u_estae --patch 40173 --output runs/u_estae_40173.npy
+python code/predict_cv.py --model utae --patch 40173 --output runs/utae_40173.npy
+python code/predict_cv.py --model utae_enhanced --patch 40173 --output runs/utae_enhanced_40173.npy
+```
 
-    python code/train_boundary.py --family ours --variant e1_td20
-    python code/train_boundary.py --family utae --variant e1_td20
+For an external sequence, pass an `.npz` containing `s2` with shape `(T, 10, 128, 128)` and `dates` with `T` ISO `YYYY-MM-DD` strings in chronological order. Use the PASTIS reflectance scale and the band order B02, B03, B04, B05, B06, B07, B08, B8A, B11, B12. For a patch with bottom or right padding, optionally include `valid_shape` as `[height, width]`. The script normalizes each member using its training folds' statistics, averages the five probability maps, and returns the class with the highest mean probability. Prepare and align external imagery before passing it to this entry point.
 
-Outputs are written to runs/ (override with RUNS_DIR). An existing last.pt resumes that run. Add --smoke for a two-batch training and one-batch validation check. Use separate output folders for concurrent runs of the same configuration.
+```bash
+python code/predict_cv.py --model u_estae --sequence inputs/patch.npz --output runs/ensemble.npy
+```
 
-Training uses folds 1-3, validation fold 4, test fold 5, seed 1, Adam at 0.001, and batch size 2. The reference loader applies fold-specific normalization, counts dates from 2018-09-01, and masks padded frames. The reported mIoU follows the original benchmark convention in code/experiment.py (remove row and column 19; average classes with nonzero union). Background is valid.
+## Training
 
-## Attribution
+`train_cv.py` implements the three training recipes with 100 epochs, Adam at 0.001, batch size 2, seed 1, and validation mIoU checkpoint selection. It requires CUDA with BF16 support and uses bounded input prefetch. The included training entry point focuses on reproducing the recipes and splits. The efficiency measurements in the study used the corresponding experiment data-pipeline configurations.
 
-The U-TAE implementation is derived from [utae-paps](https://github.com/VSainteuf/utae-paps); its license is in code/src/LICENSE. The optional Lovasz training variants use [LovaszSoftmax](https://github.com/bermanmaxim/LovaszSoftmax); see code/LOVASZ_LICENSE. PASTIS data must be obtained separately from the [dataset authors](https://github.com/VSainteuf/pastis-benchmark).
+```bash
+python code/train_cv.py --model u_estae --test-fold 5
+python code/train_cv.py --model utae --test-fold 5 --smoke
+```
+
+Outputs go to `runs/five_fold/<model>/fold_<N>/` by default. An existing `last.pt` resumes the same configuration. Use separate output directories for concurrent runs. Class 0 is background, classes 1–18 are crop types, and class 19 is void. The main PASTIS mIoU convention removes the void row and column and averages the classes with nonzero union. The evaluation code also reports metrics with only the void target row excluded.
+
+## Earlier single-fold files
+
+The original `code/predict.py`, `code/train_boundary.py`, and their two checkpoints remain available. Those files refer to the earlier single-fold comparison and are described in [results/checkpoints.json](results/checkpoints.json).
+
+## Data and attribution
+
+The U-TAE implementation is derived from [utae-paps](https://github.com/VSainteuf/utae-paps), with its MIT license in [`code/src/LICENSE`](code/src/LICENSE). The optional earlier Lovász variants use [LovaszSoftmax](https://github.com/bermanmaxim/LovaszSoftmax), with its license in [`code/LOVASZ_LICENSE`](code/LOVASZ_LICENSE). The PASTIS and external test imagery and labels are not included in this repository.

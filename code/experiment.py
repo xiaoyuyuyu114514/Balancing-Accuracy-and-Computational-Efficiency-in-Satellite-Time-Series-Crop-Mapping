@@ -42,16 +42,27 @@ def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optim
     boundary=BoundaryMetrics('cuda') if not training else None
     totals=dict(loss=0.,ce=0.,boundary_bce=0.,boundary_dice=0.,lovasz=0.);samples=0;steps=0
     predictions=[]
+    date_generator = None
+    if training and variant == "e1_td20_gpu":
+        date_generator = torch.Generator(device="cuda").manual_seed(20261112 + epoch)
     torch.cuda.synchronize();start=time.perf_counter()
     for step,cpu in enumerate(loader,1):
         if training and variant=='e1_td20':cpu=temporal_dropout(cpu,epoch,step)
         x,dates,valid,y=normalizer(cpu)
+        training_variant = variant
+        if training and variant == "e1_td20_gpu":
+            draws = torch.rand(valid.shape, device=valid.device, generator=date_generator)
+            keep = valid & (draws >= .2)
+            fallback = draws.masked_fill(~valid, -1).argmax(dim=1, keepdim=True)
+            rescue = torch.zeros_like(valid).scatter_(1, fallback, True)
+            valid = keep | (rescue & ~keep.any(dim=1, keepdim=True))
+            training_variant = "e1"
         if training:optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(training),torch.autocast('cuda',dtype=torch.bfloat16):
             if isinstance(model,BoundaryModel):logits,aux=model(x,dates,valid,with_aux=training)
             else:logits=model(x,batch_positions=dates,valid_mask=valid);aux=None
             # All validation losses are ordinary CE; segmentation metrics select checkpoints.
-            loss,parts=objective(logits,y,variant if training else 'e0',aux)
+            loss,parts=objective(logits,y,training_variant if training else 'e0',aux)
         if not torch.isfinite(loss):raise RuntimeError(f'Non-finite loss {phase} epoch {epoch} step {step}')
         if training:loss.backward();optimizer.step();steps+=1
         pred=logits.detach().argmax(1)
