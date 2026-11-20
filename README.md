@@ -55,4 +55,6 @@ The original `code/predict.py`, `code/train_boundary.py`, and their two checkpoi
 
 ## Data and attribution
 
-The U-TAE implementation is derived from [utae-paps](https://github.com/VSainteuf/utae-paps), with its MIT license in [`code/src/LICENSE`](code/src/LICENSE). The optional earlier Lovász variants use [LovaszSoftmax](https://github.com/bermanmaxim/LovaszSoftmax), with its license in [`code/LOVASZ_LICENSE`](code/LOVASZ_LICENSE). The PASTIS and external test imagery and labels are not included in this repository.
+Download the PASTIS benchmark from [Zenodo](https://doi.org/10.5281/zenodo.5012942). Download the 162 Beauce and Angers external test patches, audited labels, and checksums from the [external test dataset release](https://github.com/xiaoyuyuyu114514/Balancing-Accuracy-and-Computational-Efficiency-in-Satellite-Time-Series-Crop-Mapping/releases/tag/external-test-v1.0). See the [external dataset guide](external_test/README.md) for the file format, sources, and preprocessing for model inference.
+
+The U-TAE implementation is derived from [utae-paps](https://github.com/VSainteuf/utae-paps), with its MIT license in [`code/src/LICENSE`](code/src/LICENSE). The optional earlier Lovász variants use [LovaszSoftmax](https://github.com/bermanmaxim/LovaszSoftmax), with its license in [`code/LOVASZ_LICENSE`](code/LOVASZ_LICENSE).
