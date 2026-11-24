@@ -35,7 +35,7 @@ def segmentation_metrics(cm):
 
 
 def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optimizer=None,
-          limit=None,save_predictions=False,progress_job=None):
+          limit=None,save_predictions=False,progress_job=None,flip_projected=False):
     training=optimizer is not None;model.train(training)
     loader=ThreadBatchLoader(dataset,indices,batch_size=2,workers=4,prefetch=4)
     cm=torch.zeros((20,20),device='cuda',dtype=torch.int64)
@@ -45,6 +45,9 @@ def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optim
     date_generator = None
     if training and variant == "e1_td20_gpu":
         date_generator = torch.Generator(device="cuda").manual_seed(20261112 + epoch)
+    flip_codes = None
+    if training and flip_projected:
+        flip_codes = np.random.default_rng(1007102 + epoch).integers(4, size=len(loader))
     torch.cuda.synchronize();start=time.perf_counter()
     for step,cpu in enumerate(loader,1):
         if training and variant=='e1_td20':cpu=temporal_dropout(cpu,epoch,step)
@@ -59,8 +62,15 @@ def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optim
             training_variant = "e1"
         if training:optimizer.zero_grad(set_to_none=True)
         with torch.set_grad_enabled(training),torch.autocast('cuda',dtype=torch.bfloat16):
-            if isinstance(model,BoundaryModel):logits,aux=model(x,dates,valid,with_aux=training)
-            else:logits=model(x,batch_positions=dates,valid_mask=valid);aux=None
+            if isinstance(model,BoundaryModel):
+                logits,aux=model(x,dates,valid,with_aux=training)
+            elif flip_codes is not None:
+                axes = ((), (-1,), (-2,), (-2, -1))[flip_codes[step-1]]
+                logits = model(x,batch_positions=dates,valid_mask=valid,spatial_flip=axes)
+                aux = None
+            else:
+                logits=model(x,batch_positions=dates,valid_mask=valid)
+                aux=None
             # All validation losses are ordinary CE; segmentation metrics select checkpoints.
             loss,parts=objective(logits,y,training_variant if training else 'e0',aux)
         if not torch.isfinite(loss):raise RuntimeError(f'Non-finite loss {phase} epoch {epoch} step {step}')

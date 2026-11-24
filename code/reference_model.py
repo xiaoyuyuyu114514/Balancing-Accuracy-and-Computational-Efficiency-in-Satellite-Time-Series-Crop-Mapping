@@ -1,7 +1,6 @@
 """State + trend temporal summaries followed by a single spatial U-Net.
 
-Implements the user's proposed architecture; no pretrained weights.
-Dates are days since 2018-09-01, divided by the SAME 365-day scale for all samples.
+Dates are days since 2018-09-01 and use a shared 365-day scale.
 """
 import torch
 from torch import nn
@@ -98,12 +97,15 @@ class StateTrendUNet(nn.Module):
             trend = covariance / (variance[:, :, None] + self.ridge)
         return (mean, trend, alpha) if return_weights else (mean, trend)
 
-    def forward(self, x, batch_positions, valid_mask):
+    def forward(self, x, batch_positions, valid_mask, spatial_flip=()):
         b, t, _, h, w = x.shape
         frame_features = self.spectral(x.reshape(b*t, 10, h, w))
         scores = self.score(frame_features).reshape(b, t, self.windows, h, w)
         frame_features = frame_features.reshape(b, t, self.features, h, w)
         mean, trend = self.summarize(frame_features, scores, batch_positions, valid_mask)
-        # Window-major ordering: [M1,D1, M2,D2, ..., M6,D6], 16 channels each.
-        summary = torch.cat([mean, trend], dim=2).reshape(b, 2*self.windows*self.features, h, w)
-        return self.spatial(self.compress(summary))
+        # Window-major ordering: [M1,D1, M2,D2, ...].
+        summary = torch.cat([mean, trend], dim=2).flatten(1, 2)
+        projected = self.compress(summary)
+        if spatial_flip:
+            return self.spatial(projected.flip(spatial_flip)).flip(spatial_flip)
+        return self.spatial(projected)

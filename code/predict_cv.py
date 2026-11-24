@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from cv_models import FOLDS, TRAINING_VARIANTS, build_model, fold_split
+from cv_models import FOLDS, build_model, fold_split
 from data import DATA
 from fast_data import RawPastis
 
@@ -57,7 +57,9 @@ def predict(name, sequence, dates, stats, folds, device, valid_shape=(128, 128))
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", choices=TRAINING_VARIANTS, required=True)
+    manifest = json.loads((WEIGHTS.parents[1] / "results" / "five_fold_checkpoints.json").read_text(encoding="utf-8"))
+    available = [key for key, entry in manifest.items() if len(entry.get("folds", [])) == len(FOLDS)]
+    parser.add_argument("--model", choices=available, required=True)
     inputs = parser.add_mutually_exclusive_group(required=True)
     inputs.add_argument("--patch", type=int, help="PASTIS patch ID, using its held-out checkpoint")
     inputs.add_argument("--sequence", type=Path, help="Prepared NPZ sequence, using all five checkpoints")

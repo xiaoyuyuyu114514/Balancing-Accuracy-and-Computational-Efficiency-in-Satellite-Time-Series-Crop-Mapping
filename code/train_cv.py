@@ -7,7 +7,7 @@ import random
 import numpy as np
 import torch
 
-from cv_models import FOLDS, TRAINING_VARIANTS, build_model, fold_split
+from cv_models import COSINE_START, FLIP_TRAINING, FOLDS, TRAINING_VARIANTS, build_model, fold_split, learning_rate
 from experiment import save, stage
 from fast_data import GPUNormalizer, RawPastis
 from reference_model import StateTrendUNet
@@ -19,7 +19,7 @@ LR = .001
 
 
 def initial_model(name):
-    if name != "u_estae":
+    if name not in ("u_estae", FLIP_TRAINING):
         return build_model(name)
     reference = StateTrendUNet().state_dict()
     torch.manual_seed(SEED)
@@ -42,6 +42,8 @@ def main():
     parser.add_argument("--model", choices=TRAINING_VARIANTS, required=True)
     parser.add_argument("--test-fold", type=int, choices=FOLDS, required=True)
     parser.add_argument("--output-dir", type=Path, default=Path("runs/five_fold"))
+    parser.add_argument("--validation-start", type=int, choices=(1, 51),
+                        help="Override the validation start epoch for this run")
     parser.add_argument("--smoke", action="store_true", help="Run two training batches and one validation batch")
     args = parser.parse_args()
     if not torch.cuda.is_available() or not torch.cuda.is_bf16_supported():
@@ -59,6 +61,12 @@ def main():
     config = dict(model=args.model, folds=dict(train=train_folds, val=val_fold, test=test_fold),
                   epochs=EPOCHS, seed=SEED, batch_size=2, lr=LR, optimizer="Adam",
                   training_variant=TRAINING_VARIANTS[args.model])
+    validation_start = args.validation_start or (51 if args.model in COSINE_START else 1)
+    if args.validation_start is None and args.model == FLIP_TRAINING and test_fold == 5:
+        validation_start = 1
+    if args.model in COSINE_START or validation_start != 1:
+        config.update(validation_start_epoch=validation_start, cosine_start_epoch=COSINE_START.get(args.model),
+                      final_lr=learning_rate(args.model, EPOCHS), projected_flip=args.model == FLIP_TRAINING)
     train, validation, test = [RawPastis(folds) for folds in (train_folds, [val_fold], [test_fold])]
     norms = [GPUNormalizer(dataset) for dataset in (train, validation, test)]
     val_indices, test_indices = [list(range(len(dataset))) for dataset in (validation, test)]
@@ -70,8 +78,10 @@ def main():
     model = initial_model(args.model).cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     variant = TRAINING_VARIANTS[args.model]
+    flip = args.model == FLIP_TRAINING
     if args.smoke:
-        stage(model, train, orders[0].tolist(), norms[0], folder, "smoke_train", 1, variant, optimizer, limit=2)
+        stage(model, train, orders[0].tolist(), norms[0], folder, "smoke_train", 1, variant, optimizer,
+              limit=2, flip_projected=flip)
         stage(model, validation, val_indices, norms[1], folder, "smoke_val", 1, limit=1)
         return
 
@@ -86,17 +96,28 @@ def main():
         torch.set_rng_state(checkpoint["rng"])
         torch.cuda.set_rng_state_all(checkpoint["cuda_rng"])
         history, best, first = checkpoint["history"], checkpoint["best_checkpoint"], checkpoint["epoch"] + 1
+        if args.model in COSINE_START and checkpoint["epoch"] == 60 and not (folder / "epoch60.pt").exists():
+            store_checkpoint(folder / "epoch60.pt", checkpoint)
     save(folder / "config.json", config)
     for epoch in range(first, EPOCHS + 1):
-        tr, _ = stage(model, train, orders[epoch-1].tolist(), norms[0], folder, "train", epoch, variant, optimizer)
-        va, _ = stage(model, validation, val_indices, norms[1], folder, "val", epoch)
-        history.append(dict(epoch=epoch, train=tr, val=va))
-        if best is None or va["mIoU"] > best["val"]["mIoU"]:
+        lr = learning_rate(args.model, epoch)
+        for group in optimizer.param_groups:
+            group["lr"] = lr
+        tr, _ = stage(model, train, orders[epoch-1].tolist(), norms[0], folder, "train", epoch,
+                      variant, optimizer, flip_projected=flip)
+        va = {"seconds": 0.0, "skipped": True}
+        if epoch >= validation_start:
+            va, _ = stage(model, validation, val_indices, norms[1], folder, "val", epoch)
+        history.append(dict(epoch=epoch, train=tr, val=va, lr=lr))
+        if "mIoU" in va and (best is None or va["mIoU"] > best["val"]["mIoU"]):
             state = {key: value.detach().cpu().clone() for key, value in model.state_dict().items()}
             best = dict(epoch=epoch, state_dict=state, val=va)
-        store_checkpoint(last, dict(config=config, epoch=epoch, best_checkpoint=best, state_dict=model.state_dict(),
-                                    optimizer=optimizer.state_dict(), history=history, rng=torch.get_rng_state(),
-                                    cuda_rng=torch.cuda.get_rng_state_all()))
+        checkpoint = dict(config=config, epoch=epoch, best_checkpoint=best, state_dict=model.state_dict(),
+                          optimizer=optimizer.state_dict(), history=history, rng=torch.get_rng_state(),
+                          cuda_rng=torch.cuda.get_rng_state_all())
+        store_checkpoint(last, checkpoint)
+        if epoch == 60 and args.model in COSINE_START:
+            store_checkpoint(folder / "epoch60.pt", checkpoint)
         save(folder / "history.json", history)
 
     store_checkpoint(folder / "best.pt", best)
@@ -104,6 +125,9 @@ def main():
     test_metrics, confusion = stage(model, test, test_indices, norms[2], folder, "test", best["epoch"])
     save(folder / "test_metrics.json", test_metrics)
     np.save(folder / "confusion_test.npy", confusion)
+    save(folder / "completed.json", dict(status="completed", epochs=EPOCHS, best_epoch=best["epoch"],
+         val=best["val"], test=test_metrics, validation_epochs=EPOCHS-validation_start+1,
+         mean_train_val_seconds_per_epoch=sum(r["train"]["seconds"]+r["val"]["seconds"] for r in history)/EPOCHS))
     print(f"Test fold {test_fold}, epoch {best['epoch']}: mIoU {test_metrics['mIoU']:.2f}%", flush=True)
 
 

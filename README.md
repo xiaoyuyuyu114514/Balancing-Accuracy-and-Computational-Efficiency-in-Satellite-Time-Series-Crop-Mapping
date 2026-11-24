@@ -1,16 +1,31 @@
 # Balancing Accuracy and Computational Efficiency in Satellite Time-Series Crop Mapping
 
-This repository contains the code and 15 checkpoints for the final five-fold comparison on PASTIS. U-ESTAE aggregates per-pixel features into state and trend summaries in 12 soft date windows before applying a single spatial U-Net. Each date has 24 feature channels, and the aggregated 576-channel summary is projected to 32 channels. The original and enhanced U-TAE share the same network architecture.
+This repository contains U-ESTAE, U-TAE, and 25 inference checkpoints from the completed PASTIS five-fold experiments. The U-ESTAE experiments cover the original 6-window, 16-channel architecture and the 12-window, 24-channel configuration. The original and enhanced U-TAE share the same network architecture.
 
 ## Five-fold checkpoints
 
-| Model | Training recipe | Weights | PASTIS test mIoU, mean ± SD (%) |
-|---|---|---|---:|
-| U-TAE | Cross-entropy, full sequence | [utae](weights/five_fold/utae/) | 63.17 ± 1.95 |
-| U-TAE enhanced | Boundary-weighted cross-entropy (E1) and 20% temporal dropout (CPU) | [utae_enhanced](weights/five_fold/utae_enhanced/) | 65.03 ± 1.27 |
-| U-ESTAE | E1 and 20% temporal dropout (GPU mask) | [u_estae](weights/five_fold/u_estae/) | 62.98 ± 1.30 |
+| Model | Training recipe | Checkpoints | Test mIoU, mean ± SD (%) | Pooled mIoU (%) | Train + val (s/epoch) | Inference (ms/patch) |
+|---|---|---|---:|---:|---:|---:|
+| U-TAE | Cross-entropy, full sequence, fixed LR | [utae](weights/five_fold/utae/) | 63.17 ± 1.95 | 63.27 | 86.06 | 17.68 |
+| U-TAE | Cross-entropy, full sequence, cosine from epoch 41 | [utae_cosine60](weights/five_fold/utae_cosine60/) | 63.66 ± 0.97 | 63.80 | 77.69 | 16.16 |
+| U-TAE enhanced | E1 and CPU temporal dropout (20%), fixed LR | [utae_enhanced](weights/five_fold/utae_enhanced/) | 65.07 ± 1.25 | 65.24 | 82.96 | 16.73 |
+| U-ESTAE (12 × 24) | E1 and GPU temporal dropout (20%), fixed LR | [u_estae](weights/five_fold/u_estae/) | 62.98 ± 1.30 | 63.12 | 30.50 | 4.53 |
+| U-ESTAE (12 × 24) | E1, GPU temporal dropout (20%), spatial flips, cosine from epoch 61 | [u_estae_flip_cosine](weights/five_fold/u_estae_flip_cosine/) | 63.64 ± 1.32 | 63.74 | 29.54 | 4.53 |
 
-Each `fold_N.pt` contains a CPU `state_dict` and the selected epoch for **test fold N**. Each run uses three training folds and the preceding validation fold, with fold 5 preceding fold 1. The per-fold validation and test scores, split assignments, selected epochs, and SHA-256 hashes are in the [checkpoint manifest](results/five_fold_checkpoints.json).
+Each `fold_N.pt` contains a CPU `state_dict` and the epoch selected by validation mIoU for **test fold N**. Each run uses three training folds and the preceding validation fold, with fold 5 preceding fold 1. U-TAE enhanced uses the fold-5 rerun selected at epoch 79.
+
+- [Checkpoint manifest and per-fold metrics](results/five_fold_checkpoints.json) includes accuracy, class IoU, selected epochs, timing, and SHA-256 hashes.
+- [Five-fold confusion matrices](results/pastis_confusion_matrices.json) store pixel counts with reference classes on rows and predictions on columns. Pooled mIoU is calculated after adding the five matrices and excluding class 19.
+- [U-ESTAE single-fold ablations](results/uestae_ablations.json) contains the completed structural and training-pipeline experiments and their settings.
+
+Training time is the sum of training and actual validation time divided by the number of training epochs. The cosine U-TAE validates from epoch 51. The cosine U-ESTAE validates from epoch 51 on folds 1–4 and every epoch on fold 5. Inference time is the median of the per-fold latency medians for a BF16, 46-date, 128 × 128 patch, excluding data loading.
+
+## U-ESTAE components
+
+1. A pointwise convolution and GELU project the 10 input bands to per-date spectral features.
+2. A depthwise spatial convolution and pointwise projection score the dates in each window. A Gaussian date prior and a masked temporal softmax produce the aggregation weights.
+3. Each window contributes a weighted feature mean (State) and a regularized weighted linear slope (Trend). The model projects the resulting 192 channels (6 × 16 × 2) or 576 channels (12 × 24 × 2) to 32 and applies one 2D U-Net. [Model code](code/reference_model.py)
+4. E1 assigns a weight of 3 to valid pixels within one pixel of a semantic class boundary. GPU temporal dropout masks 20% of valid dates during training. Projected-feature flips apply a horizontal or vertical flip to the 32-channel feature map and invert it on the logits. [Boundary loss](code/boundaries.py) · [Training steps](code/experiment.py)
 
 ## Setup
 
@@ -28,7 +43,8 @@ Predict a held-out PASTIS patch. The script selects the appropriate checkpoint f
 
 ```bash
 python code/predict_cv.py --model u_estae --patch 40173 --output runs/u_estae_40173.npy
-python code/predict_cv.py --model utae --patch 40173 --output runs/utae_40173.npy
+python code/predict_cv.py --model u_estae_flip_cosine --patch 40173 --output runs/u_estae_flip_40173.npy
+python code/predict_cv.py --model utae_cosine60 --patch 40173 --output runs/utae_cosine_40173.npy
 python code/predict_cv.py --model utae_enhanced --patch 40173 --output runs/utae_enhanced_40173.npy
 ```
 
@@ -40,14 +56,17 @@ python code/predict_cv.py --model u_estae --sequence inputs/patch.npz --output r
 
 ## Training
 
-`train_cv.py` implements the three training recipes with 100 epochs, Adam at 0.001, batch size 2, seed 1, and validation mIoU checkpoint selection. It requires CUDA with BF16 support and uses bounded input prefetch. The included training entry point focuses on reproducing the recipes and splits. The efficiency measurements in the study used the corresponding experiment data-pipeline configurations.
+`train_cv.py` runs the main recipes for 100 epochs with Adam, initial LR 0.001, batch size 2, seed 1, and validation mIoU checkpoint selection. Cosine schedules reach 0.0001 at epoch 100 and save the full training state at epoch 60. The portable entry point uses bounded input prefetch and requires CUDA with BF16 support. Published timings come from the original runs, where U-ESTAE preloaded imagery into RAM.
 
 ```bash
-python code/train_cv.py --model u_estae --test-fold 5
-python code/train_cv.py --model utae --test-fold 5 --smoke
+python code/train_cv.py --model u_estae_flip_cosine --test-fold 1
+python code/train_cv.py --model utae_cosine60 --test-fold 5
+python code/train_cv.py --model u_estae_e0_cosine60 --test-fold 1
 ```
 
 Outputs go to `runs/five_fold/<model>/fold_<N>/` by default. An existing `last.pt` resumes the same configuration. Use separate output directories for concurrent runs. Class 0 is background, classes 1–18 are crop types, and class 19 is void. The main PASTIS mIoU convention removes the void row and column and averages the classes with nonzero union. The evaluation code also reports metrics with only the void target row excluded.
+
+The original U-ESTAE E0 recipe (`u_estae_e0_cosine60`, 6 windows × 16 channels, cross-entropy, full time series) runs cosine decay from epoch 41 and validates from epoch 51. Its five-fold evaluation was still running at the time of this update.
 
 ## Earlier single-fold files
 
