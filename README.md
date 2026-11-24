@@ -7,7 +7,7 @@ This repository contains U-ESTAE, U-TAE, and 25 inference checkpoints from the c
 | Model | Training recipe | Checkpoints | Test mIoU, mean ± SD (%) | Pooled mIoU (%) | Train + val (s/epoch) | Inference (ms/patch) |
 |---|---|---|---:|---:|---:|---:|
 | U-TAE | Cross-entropy, full sequence, fixed LR | [utae](weights/five_fold/utae/) | 63.17 ± 1.95 | 63.27 | 86.06 | 17.68 |
-| U-TAE | Cross-entropy, full sequence, cosine from epoch 41 | [utae_cosine60](weights/five_fold/utae_cosine60/) | 63.66 ± 0.97 | 63.80 | 77.69 | 16.16 |
+| U-TAE | Cross-entropy, full sequence, cosine over epochs 41–100 | [utae_cosine60](weights/five_fold/utae_cosine60/) | 63.66 ± 0.97 | 63.80 | 77.69 | 16.16 |
 | U-TAE enhanced | E1 and CPU temporal dropout (20%), fixed LR | [utae_enhanced](weights/five_fold/utae_enhanced/) | 65.07 ± 1.25 | 65.24 | 82.96 | 16.73 |
 | U-ESTAE (12 × 24) | E1 and GPU temporal dropout (20%), fixed LR | [u_estae](weights/five_fold/u_estae/) | 62.98 ± 1.30 | 63.12 | 30.50 | 4.53 |
 | U-ESTAE (12 × 24) | E1, GPU temporal dropout (20%), spatial flips, cosine from epoch 61 | [u_estae_flip_cosine](weights/five_fold/u_estae_flip_cosine/) | 63.64 ± 1.32 | 63.74 | 29.54 | 4.53 |
@@ -18,7 +18,7 @@ Each `fold_N.pt` contains a CPU `state_dict` and the epoch selected by validatio
 - [Five-fold confusion matrices](results/pastis_confusion_matrices.json) store pixel counts with reference classes on rows and predictions on columns. Pooled mIoU is calculated after adding the five matrices and excluding class 19.
 - [U-ESTAE single-fold ablations](results/uestae_ablations.json) contains the completed structural and training-pipeline experiments and their settings.
 
-Training time is the sum of training and actual validation time divided by the number of training epochs. The cosine U-TAE validates from epoch 51. The cosine U-ESTAE validates from epoch 51 on folds 1–4 and every epoch on fold 5. Inference time is the median of the per-fold latency medians for a BF16, 46-date, 128 × 128 patch, excluding data loading.
+Training time is the sum of training and actual validation time divided by the number of training epochs. The published original U-TAE cosine checkpoints (`utae_cosine60`) used a learning rate of 0.001 through epoch 40 and cosine decay over epochs 41–100 to 0.0001, with validation starting at epoch 51. The enhanced U-ESTAE cosine checkpoints (`u_estae_flip_cosine`) validate from epoch 51 on folds 1–4 and every epoch on fold 5. Inference time is the median of the per-fold latency medians for a BF16, 46-date, 128 × 128 patch, excluding data loading.
 
 ## U-ESTAE components
 
@@ -61,12 +61,12 @@ python code/predict_cv.py --model u_estae --sequence inputs/patch.npz --output r
 ```bash
 python code/train_cv.py --model u_estae_flip_cosine --test-fold 1
 python code/train_cv.py --model utae_cosine60 --test-fold 5
-python code/train_cv.py --model u_estae_e0_cosine60 --test-fold 1
+python code/train_cv.py --model u_estae_e0_cosine40 --test-fold 1
 ```
 
 Outputs go to `runs/five_fold/<model>/fold_<N>/` by default. An existing `last.pt` resumes the same configuration. Use separate output directories for concurrent runs. Class 0 is background, classes 1–18 are crop types, and class 19 is void. The main PASTIS mIoU convention removes the void row and column and averages the classes with nonzero union. The evaluation code also reports metrics with only the void target row excluded.
 
-The original U-ESTAE E0 recipe (`u_estae_e0_cosine60`, 6 windows × 16 channels, cross-entropy, full time series) runs cosine decay from epoch 41 and validates from epoch 51. Its five-fold evaluation was still running at the time of this update.
+The original U-ESTAE E0 recipe `u_estae_e0_cosine40` uses 6 windows × 16 channels, ordinary cross-entropy and the full time series. It uses a learning rate of 0.001 through epoch 60, then cosine decay over epochs 61–100 to 0.0001. Validation starts at epoch 51. The earlier `u_estae_e0_cosine60` recipe remains available for reproducing the epoch-41 schedule. The published original U-TAE checkpoints and results correspond to their historical epoch-41 schedule.
 
 ## Earlier single-fold files
 

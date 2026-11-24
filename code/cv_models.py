@@ -14,8 +14,14 @@ TRAINING_VARIANTS = {
     "utae_cosine60": "e0",
     "u_estae_flip_cosine": "e1_td20_gpu",
     "u_estae_e0_cosine60": "e0",
+    "u_estae_e0_cosine40": "e0",
 }
-COSINE_START = {"utae_cosine60": 41, "u_estae_flip_cosine": 61, "u_estae_e0_cosine60": 41}
+COSINE_START = {
+    "utae_cosine60": 41,
+    "u_estae_flip_cosine": 61,
+    "u_estae_e0_cosine60": 41,
+    "u_estae_e0_cosine40": 61,
+}
 FLIP_TRAINING = "u_estae_flip_cosine"
 
 
@@ -38,7 +44,7 @@ def fold_split(test_fold):
 def build_model(name):
     if name in ("u_estae", FLIP_TRAINING):
         return StateTrendUNet(windows=12, features=24, sigma_days=60.0)
-    if name == "u_estae_e0_cosine60":
+    if name in ("u_estae_e0_cosine60", "u_estae_e0_cosine40"):
         return StateTrendUNet()
     if name in ("utae", "utae_enhanced", "utae_cosine60"):
         return get_model("utae")
