@@ -7,7 +7,8 @@ import random
 import numpy as np
 import torch
 
-from cv_models import COSINE_START, FLIP_TRAINING, FOLDS, TRAINING_VARIANTS, build_model, fold_split, learning_rate
+from cv_models import (COSINE_START, FLIP_TRAINING, FOLDS, INPUT_FLIPS, PROJECTED_FLIPS,
+                       TRAINING_VARIANTS, UESTAE_ARCHITECTURES, build_model, fold_split, learning_rate)
 from experiment import save, stage
 from fast_data import GPUNormalizer, RawPastis
 from reference_model import StateTrendUNet
@@ -19,7 +20,7 @@ LR = .001
 
 
 def initial_model(name):
-    if name not in ("u_estae", FLIP_TRAINING):
+    if name not in UESTAE_ARCHITECTURES:
         return build_model(name)
     reference = StateTrendUNet().state_dict()
     torch.manual_seed(SEED)
@@ -66,7 +67,9 @@ def main():
         validation_start = 1
     if args.model in COSINE_START or validation_start != 1:
         config.update(validation_start_epoch=validation_start, cosine_start_epoch=COSINE_START.get(args.model),
-                      final_lr=learning_rate(args.model, EPOCHS), projected_flip=args.model == FLIP_TRAINING)
+                      final_lr=learning_rate(args.model, EPOCHS), projected_flip=args.model in PROJECTED_FLIPS)
+    if args.model in INPUT_FLIPS:
+        config["input_flip"] = True
     train, validation, test = [RawPastis(folds) for folds in (train_folds, [val_fold], [test_fold])]
     norms = [GPUNormalizer(dataset) for dataset in (train, validation, test)]
     val_indices, test_indices = [list(range(len(dataset))) for dataset in (validation, test)]
@@ -78,10 +81,10 @@ def main():
     model = initial_model(args.model).cuda()
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     variant = TRAINING_VARIANTS[args.model]
-    flip = args.model == FLIP_TRAINING
+    flip_options = dict(flip_projected=args.model in PROJECTED_FLIPS, flip_input=args.model in INPUT_FLIPS)
     if args.smoke:
         stage(model, train, orders[0].tolist(), norms[0], folder, "smoke_train", 1, variant, optimizer,
-              limit=2, flip_projected=flip)
+              limit=2, **flip_options)
         stage(model, validation, val_indices, norms[1], folder, "smoke_val", 1, limit=1)
         return
 
@@ -104,7 +107,7 @@ def main():
         for group in optimizer.param_groups:
             group["lr"] = lr
         tr, _ = stage(model, train, orders[epoch-1].tolist(), norms[0], folder, "train", epoch,
-                      variant, optimizer, flip_projected=flip)
+                      variant, optimizer, **flip_options)
         va = {"seconds": 0.0, "skipped": True}
         if epoch >= validation_start:
             va, _ = stage(model, validation, val_indices, norms[1], folder, "val", epoch)

@@ -1740,5 +1740,1031 @@
     "test_near_boundary_error_pct": 25.1771644908214,
     "mean_train_val_seconds_per_epoch": 30.93660993899997,
     "inference_latency_ms_median": 3.0317000000650296
+  },
+  "final_ablation_content_only": {
+    "config": {
+      "variant": "final_ablation_content_only",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "content",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 97,
+    "val_miou_pct": 62.381784959671464,
+    "test_miou_pct": 61.644305310939416,
+    "test_oa_pct": 83.04422918794648,
+    "test_boundary_f1_pct": 78.02078747258544,
+    "test_near_boundary_error_pct": 24.011426661786683,
+    "mean_train_val_seconds_per_epoch": 28.859710454999984,
+    "inference_latency_ms_median": 4.469700000072407,
+    "gflops_per_patch": 12.12317696
+  },
+  "final_ablation_date_prior_only": {
+    "config": {
+      "variant": "final_ablation_date_prior_only",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "date",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 87,
+    "val_miou_pct": 59.985361199356404,
+    "test_miou_pct": 58.90113688516047,
+    "test_oa_pct": 81.9080668131307,
+    "test_boundary_f1_pct": 76.1375090861391,
+    "test_near_boundary_error_pct": 26.320065069420888,
+    "mean_train_val_seconds_per_epoch": 15.770967391000005,
+    "inference_latency_ms_median": 2.505249999899206,
+    "gflops_per_patch": 10.576464044
+  },
+  "final_ablation_features16": {
+    "config": {
+      "variant": "final_ablation_features16",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 16,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 87,
+    "val_miou_pct": 64.22055659663273,
+    "test_miou_pct": 62.52307773623813,
+    "test_oa_pct": 83.08176065308037,
+    "test_boundary_f1_pct": 77.79542117446427,
+    "test_near_boundary_error_pct": 23.907051721014522,
+    "mean_train_val_seconds_per_epoch": 24.820335091999997,
+    "inference_latency_ms_median": 3.9667999999437598,
+    "gflops_per_patch": 10.690953768
+  },
+  "final_ablation_features32": {
+    "config": {
+      "variant": "final_ablation_features32",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 32,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 99,
+    "val_miou_pct": 65.75206054242102,
+    "test_miou_pct": 63.44120365487711,
+    "test_oa_pct": 83.21012100336127,
+    "test_boundary_f1_pct": 78.25431087336997,
+    "test_near_boundary_error_pct": 23.419499864215467,
+    "mean_train_val_seconds_per_epoch": 29.921000833999972,
+    "inference_latency_ms_median": 5.124400000113383,
+    "gflops_per_patch": 13.573489192
+  },
+  "final_ablation_features8": {
+    "config": {
+      "variant": "final_ablation_features8",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 8,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 87,
+    "val_miou_pct": 62.01093560779169,
+    "test_miou_pct": 61.16076906950399,
+    "test_oa_pct": 82.581825100359,
+    "test_boundary_f1_pct": 77.2319989115659,
+    "test_near_boundary_error_pct": 24.902514742918527,
+    "mean_train_val_seconds_per_epoch": 22.830917181,
+    "inference_latency_ms_median": 3.465600000026825,
+    "gflops_per_patch": 9.249686056
+  },
+  "final_ablation_sigma30": {
+    "config": {
+      "variant": "final_ablation_sigma30",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 30.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 86,
+    "val_miou_pct": 64.43812706164131,
+    "test_miou_pct": 63.885138898230345,
+    "test_oa_pct": 83.41350319106489,
+    "test_boundary_f1_pct": 78.233079346285,
+    "test_near_boundary_error_pct": 23.8121867203063,
+    "mean_train_val_seconds_per_epoch": 28.841872944999995,
+    "inference_latency_ms_median": 4.5407500001601875,
+    "gflops_per_patch": 12.13222148
+  },
+  "final_ablation_sigma90": {
+    "config": {
+      "variant": "final_ablation_sigma90",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 90.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 97,
+    "val_miou_pct": 64.29204084763197,
+    "test_miou_pct": 62.75732234785234,
+    "test_oa_pct": 83.2241199659039,
+    "test_boundary_f1_pct": 77.94463197841424,
+    "test_near_boundary_error_pct": 23.683501158103088,
+    "mean_train_val_seconds_per_epoch": 28.651688561999972,
+    "inference_latency_ms_median": 4.51599999996688,
+    "gflops_per_patch": 12.13222148
+  },
+  "final_ablation_state_only_val51": {
+    "config": {
+      "variant": "final_ablation_state_only",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "state",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 97,
+    "val_miou_pct": 63.65376749935907,
+    "test_miou_pct": 63.020322662264086,
+    "test_oa_pct": 83.14539977242782,
+    "test_boundary_f1_pct": 77.70385977191245,
+    "test_near_boundary_error_pct": 23.942580053436487,
+    "mean_train_val_seconds_per_epoch": 23.061369087,
+    "inference_latency_ms_median": 4.563299999972514,
+    "gflops_per_patch": 12.13222148
+  },
+  "final_ablation_trend_only": {
+    "config": {
+      "variant": "final_ablation_trend_only",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 12,
+      "sigma_days": 60.0,
+      "summary": "trend",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 97,
+    "val_miou_pct": 63.20977266362705,
+    "test_miou_pct": 61.57991547738927,
+    "test_oa_pct": 83.01723118875711,
+    "test_boundary_f1_pct": 77.47662328733827,
+    "test_near_boundary_error_pct": 24.2405358516369,
+    "mean_train_val_seconds_per_epoch": 27.702689943999996,
+    "inference_latency_ms_median": 4.474849999951402,
+    "gflops_per_patch": 12.13222148
+  },
+  "final_ablation_windows18": {
+    "config": {
+      "variant": "final_ablation_windows18",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 18,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 96,
+    "val_miou_pct": 64.90564556777507,
+    "test_miou_pct": 64.53066556173206,
+    "test_oa_pct": 83.59357203801746,
+    "test_boundary_f1_pct": 78.29248079592843,
+    "test_near_boundary_error_pct": 23.322491778422414,
+    "mean_train_val_seconds_per_epoch": 31.852897677,
+    "inference_latency_ms_median": 5.405949999840232,
+    "gflops_per_patch": 13.624967996
+  },
+  "final_ablation_windows4": {
+    "config": {
+      "variant": "final_ablation_windows4",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 4,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 96,
+    "val_miou_pct": 63.21758461162652,
+    "test_miou_pct": 61.68748277503163,
+    "test_oa_pct": 83.03592843324898,
+    "test_boundary_f1_pct": 77.54771100133766,
+    "test_near_boundary_error_pct": 24.485048465534337,
+    "mean_train_val_seconds_per_epoch": 20.880292731000004,
+    "inference_latency_ms_median": 3.302999999959866,
+    "gflops_per_patch": 10.141892792
+  },
+  "final_ablation_windows6": {
+    "config": {
+      "variant": "final_ablation_windows6",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 6,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 83,
+    "val_miou_pct": 63.39271992369115,
+    "test_miou_pct": 62.76659639888224,
+    "test_oa_pct": 82.67333886625663,
+    "test_boundary_f1_pct": 76.80328187970017,
+    "test_near_boundary_error_pct": 24.14466627979516,
+    "mean_train_val_seconds_per_epoch": 23.017154320999992,
+    "inference_latency_ms_median": 3.5031499999149673,
+    "gflops_per_patch": 10.639474964
+  },
+  "final_ablation_windows8": {
+    "config": {
+      "variant": "final_ablation_windows8",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 8,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 96,
+    "val_miou_pct": 63.960688028465874,
+    "test_miou_pct": 62.72951654728578,
+    "test_oa_pct": 83.14909812848116,
+    "test_boundary_f1_pct": 77.99740324193584,
+    "test_near_boundary_error_pct": 23.97596530077362,
+    "mean_train_val_seconds_per_epoch": 24.722816928999986,
+    "inference_latency_ms_median": 3.8446000000931235,
+    "gflops_per_patch": 11.137057136
+  },
+  "uestae_pro": {
+    "config": {
+      "variant": "uestae_pro",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 32,
+      "windows": 18,
+      "sigma_days": 30.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 96,
+    "val_miou_pct": 65.77879636239638,
+    "test_miou_pct": 64.37410444528294,
+    "test_oa_pct": 83.5338230413335,
+    "test_boundary_f1_pct": 78.46563388403062,
+    "test_near_boundary_error_pct": 23.336388345769365,
+    "mean_train_val_seconds_per_epoch": 34.36682003899997,
+    "inference_latency_ms_median": 5.896300000131305,
+    "gflops_per_patch": 15.557755708
+  },
+  "uestae_pro_sigma60": {
+    "config": {
+      "variant": "uestae_pro_sigma60",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 32,
+      "windows": 18,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 96,
+    "val_miou_pct": 65.54219033414563,
+    "test_miou_pct": 63.55636830779739,
+    "test_oa_pct": 83.51218080961397,
+    "test_boundary_f1_pct": 78.59205095730383,
+    "test_near_boundary_error_pct": 23.30055864200735,
+    "mean_train_val_seconds_per_epoch": 33.62706951199998,
+    "inference_latency_ms_median": 5.88570000013533,
+    "gflops_per_patch": 15.557755708
+  },
+  "uestae_pro_windows24_features24_sigma30": {
+    "config": {
+      "variant": "uestae_pro_windows24_features24_sigma30",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 24,
+      "sigma_days": 30.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 84,
+    "val_miou_pct": 65.63347220425972,
+    "test_miou_pct": 64.55051086972465,
+    "test_oa_pct": 83.60976261896207,
+    "test_boundary_f1_pct": 78.41809221320716,
+    "test_near_boundary_error_pct": 23.1762931927916,
+    "mean_train_val_seconds_per_epoch": 36.049196213999984,
+    "inference_latency_ms_median": 6.473400000004403,
+    "gflops_per_patch": 15.117714512
+  },
+  "uestae_pro_windows24_features24_sigma60": {
+    "config": {
+      "variant": "uestae_pro_windows24_features24_sigma60",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 24,
+      "windows": 24,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 84,
+    "val_miou_pct": 65.57289203438825,
+    "test_miou_pct": 63.82057980861434,
+    "test_oa_pct": 83.63751398697713,
+    "test_boundary_f1_pct": 78.58955823187426,
+    "test_near_boundary_error_pct": 23.29245510153033,
+    "mean_train_val_seconds_per_epoch": 36.784950099000014,
+    "inference_latency_ms_median": 6.4922499998374406,
+    "gflops_per_patch": 15.117714512
+  },
+  "uestae_pro_windows32_features32_sigma30": {
+    "config": {
+      "variant": "uestae_pro_windows32_features32_sigma30",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 32,
+      "windows": 32,
+      "sigma_days": 30.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 90,
+    "val_miou_pct": 65.74337368367803,
+    "test_miou_pct": 64.22668395471091,
+    "test_oa_pct": 83.72402812339523,
+    "test_boundary_f1_pct": 78.42849918115962,
+    "test_near_boundary_error_pct": 23.36096685283602,
+    "mean_train_val_seconds_per_epoch": 46.38217675799999,
+    "inference_latency_ms_median": 8.877350000147999,
+    "gflops_per_patch": 20.187710912
+  },
+  "uestae_pro_windows32_features32_sigma60": {
+    "config": {
+      "variant": "uestae_pro_windows32_features32_sigma60",
+      "epochs": 100,
+      "seed": 1,
+      "batch_size": 2,
+      "lr": 0.001,
+      "optimizer": "Adam",
+      "loss": "E1",
+      "gpu_td20": true,
+      "td_seed": "20261112+epoch",
+      "selection": "validation mIoU",
+      "evaluation_full_sequence": true,
+      "folds": {
+        "train": [
+          1,
+          2,
+          3
+        ],
+        "val": [
+          4
+        ],
+        "test": [
+          5
+        ]
+      },
+      "sampling_sha256": "0feedff16a86ee3eef35f3ca157c01983baf8ab63c04f0296d85827eb82031f3",
+      "family": "ours",
+      "features": 32,
+      "windows": 32,
+      "sigma_days": 60.0,
+      "summary": "both",
+      "projection_channels": 32,
+      "lovasz_weight": 0.0,
+      "lr_schedule": "constant through epoch 60, cosine to epoch 100",
+      "final_lr": 0.0001,
+      "boundary_multiplier": 3.0,
+      "temporal_dropout": 0.2,
+      "cosine_start_epoch": 61,
+      "temporal_weighting": "joint",
+      "spatial_augmentation": "uniform identity/H/V/HV on projected features, inverse on logits",
+      "augmentation_seed": "1007102+epoch per minibatch",
+      "validation_start_epoch": 51
+    },
+    "best_epoch": 87,
+    "val_miou_pct": 65.9822305733205,
+    "test_miou_pct": 65.0376996266771,
+    "test_oa_pct": 83.70915251349182,
+    "test_boundary_f1_pct": 78.55154817033625,
+    "test_near_boundary_error_pct": 23.1074465844414,
+    "mean_train_val_seconds_per_epoch": 44.61139969599999,
+    "inference_latency_ms_median": 8.594800000082614,
+    "gflops_per_patch": 20.187710912
   }
 }

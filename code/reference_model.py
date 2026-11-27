@@ -41,13 +41,20 @@ class SpatialUNet(nn.Module):
 
 class StateTrendUNet(nn.Module):
     def __init__(self, features=16, windows=6, widths=(32, 64, 96, 128),
-                 time_scale=365.0, sigma_days=60.0, ridge=1e-3):
+                 time_scale=365.0, sigma_days=60.0, ridge=1e-3,
+                 temporal_weighting="joint", summary="both"):
         super().__init__()
         self.features = features
         self.windows = windows
         self.time_scale = time_scale
         self.sigma_days = sigma_days
         self.ridge = ridge
+        if temporal_weighting not in ("joint", "date", "content"):
+            raise ValueError(f"Unknown temporal weighting: {temporal_weighting}")
+        if summary not in ("both", "state", "trend"):
+            raise ValueError(f"Unknown summary: {summary}")
+        self.temporal_weighting = temporal_weighting
+        self.summary = summary
         # Endpoints use TRAINING metadata only; fixed for all splits and samples.
         self.register_buffer('centers_days', torch.linspace(16., 421., windows))
         self.spectral = nn.Sequential(nn.Conv2d(10, features, 1), nn.GELU())
@@ -82,9 +89,14 @@ class StateTrendUNet(nn.Module):
             tau = dates.float() / self.time_scale
             center = self.centers_days / self.time_scale
             sigma = self.sigma_days / self.time_scale
-            log_prior = -.5 * ((tau[:, None, :] - center[None, :, None]) / sigma)**2
-            scores = content_scores.float().permute(0, 2, 1, 3, 4)
-            logits = scores + log_prior[..., None, None]
+            if self.temporal_weighting != "content":
+                log_prior = -.5 * ((tau[:, None, :] - center[None, :, None]) / sigma)**2
+            if self.temporal_weighting == "date":
+                logits = log_prior[..., None, None]
+            else:
+                logits = content_scores.float().permute(0, 2, 1, 3, 4)
+                if self.temporal_weighting == "joint":
+                    logits = logits + log_prior[..., None, None]
             logits = logits.masked_fill(~valid[:, None, :, None, None], -torch.inf)
             alpha = logits.softmax(dim=2)
             mean = torch.einsum('bkthw,btchw->bkchw', alpha, features)
@@ -95,12 +107,18 @@ class StateTrendUNet(nn.Module):
             covariance = covariance - mean * coeff.sum(dim=2)[:, :, None]
             variance = (alpha * dt.square()).sum(dim=2)
             trend = covariance / (variance[:, :, None] + self.ridge)
-        return (mean, trend, alpha) if return_weights else (mean, trend)
+        if self.summary == "state":
+            trend = torch.zeros_like(trend)
+        if self.summary == "trend":
+            mean = torch.zeros_like(mean)
+        return (mean, trend, alpha.expand(-1, -1, -1, *features.shape[-2:])) if return_weights else (mean, trend)
 
     def forward(self, x, batch_positions, valid_mask, spatial_flip=()):
         b, t, _, h, w = x.shape
         frame_features = self.spectral(x.reshape(b*t, 10, h, w))
-        scores = self.score(frame_features).reshape(b, t, self.windows, h, w)
+        scores = None
+        if self.temporal_weighting != "date":
+            scores = self.score(frame_features).reshape(b, t, self.windows, h, w)
         frame_features = frame_features.reshape(b, t, self.features, h, w)
         mean, trend = self.summarize(frame_features, scores, batch_positions, valid_mask)
         # Window-major ordering: [M1,D1, M2,D2, ...].

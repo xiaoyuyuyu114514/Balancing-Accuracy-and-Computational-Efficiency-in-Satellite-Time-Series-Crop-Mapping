@@ -35,7 +35,7 @@ def segmentation_metrics(cm):
 
 
 def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optimizer=None,
-          limit=None,save_predictions=False,progress_job=None,flip_projected=False):
+          limit=None,save_predictions=False,progress_job=None,flip_projected=False,flip_input=False):
     training=optimizer is not None;model.train(training)
     loader=ThreadBatchLoader(dataset,indices,batch_size=2,workers=4,prefetch=4)
     cm=torch.zeros((20,20),device='cuda',dtype=torch.int64)
@@ -46,12 +46,13 @@ def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optim
     if training and variant == "e1_td20_gpu":
         date_generator = torch.Generator(device="cuda").manual_seed(20261112 + epoch)
     flip_codes = None
-    if training and flip_projected:
+    if training and (flip_projected or flip_input):
         flip_codes = np.random.default_rng(1007102 + epoch).integers(4, size=len(loader))
     torch.cuda.synchronize();start=time.perf_counter()
     for step,cpu in enumerate(loader,1):
         if training and variant=='e1_td20':cpu=temporal_dropout(cpu,epoch,step)
         x,dates,valid,y=normalizer(cpu)
+        axes = ((), (-1,), (-2,), (-2, -1))[flip_codes[step-1]] if flip_codes is not None else ()
         training_variant = variant
         if training and variant == "e1_td20_gpu":
             draws = torch.rand(valid.shape, device=valid.device, generator=date_generator)
@@ -64,8 +65,10 @@ def stage(model,dataset,indices,normalizer,folder,phase,epoch,variant='e0',optim
         with torch.set_grad_enabled(training),torch.autocast('cuda',dtype=torch.bfloat16):
             if isinstance(model,BoundaryModel):
                 logits,aux=model(x,dates,valid,with_aux=training)
-            elif flip_codes is not None:
-                axes = ((), (-1,), (-2,), (-2, -1))[flip_codes[step-1]]
+            elif axes and flip_input:
+                logits = model(x.flip(axes), batch_positions=dates, valid_mask=valid).flip(axes)
+                aux = None
+            elif axes and flip_projected:
                 logits = model(x,batch_positions=dates,valid_mask=valid,spatial_flip=axes)
                 aux = None
             else:
